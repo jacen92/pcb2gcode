@@ -1,6 +1,6 @@
 /*
  * This file is part of pcb2gcode.
- * 
+ *
  * Copyright (C) 2009, 2010 Patrick Birnzain <pbirnzain@users.sourceforge.net> and others
  * Copyright (C) 2010 Bernhard Kubicek <kubicek@gmx.at>
  * Copyright (C) 2013 Erik Schuster <erik@muenchen-ist-toll.de>
@@ -10,12 +10,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * pcb2gcode is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with pcb2gcode.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -44,7 +44,7 @@ using boost::format;
  */
 /******************************************************************************/
 NGC_Exporter::NGC_Exporter(shared_ptr<Board> board)
-    : Exporter(board), dpi(board->get_dpi()), 
+    : Exporter(board), dpi(board->get_dpi()),
       quantization_error( 2.0 / dpi ), ocodes(1), globalVars(100)
 {
     this->board = board;
@@ -72,10 +72,10 @@ void NGC_Exporter::export_all(boost::program_options::variables_map& options)
     bFrontAutoleveller = options["al-front"].as<bool>();
     bBackAutoleveller = options["al-back"].as<bool>();
     string outputdir = options["output-dir"].as<string>();
-    
+
     //set imperial/metric conversion factor for output coordinates depending on metricoutput option
     cfactor = bMetricoutput ? 25.4 : 1;
-    
+
     if( options["zero-start"].as<bool>() )
     {
         xoffset = board->get_min_x();
@@ -86,7 +86,7 @@ void NGC_Exporter::export_all(boost::program_options::variables_map& options)
         xoffset = 0;
         yoffset = 0;
     }
-    
+
     tileInfo = Tiling::generateTileInfo( options, ocodes, board->get_height(), board->get_width() );
 
     if( bFrontAutoleveller || bBackAutoleveller )
@@ -132,7 +132,7 @@ void NGC_Exporter::export_layer(shared_ptr<Layer> layer, string of_name)
     double yoffsetTot;
     Tiling tiling( tileInfo, cfactor );
     tiling.setGCodeEnd(string("\nG04 P0 ( dwell for no time -- G64 should not smooth over this point )\n")
-        + (bZchangeG53 ? "G53 " : "") + "G00 Z" + str( format("%.3f") % ( mill->zchange * cfactor ) ) + 
+        + (bZchangeG53 ? "G53 " : "") + "G00 Z" + str( format("%.3f") % ( mill->zchange * cfactor ) ) +
         " ( retract )\n\n" + postamble + "M5 ( Spindle off. )\nM9 ( Coolant off. )\n"
         "M2 ( Program end. )\n\n" );
 
@@ -199,13 +199,13 @@ void NGC_Exporter::export_layer(shared_ptr<Layer> layer, string of_name)
 
     of << "F" << mill->feed * cfactor << " ( Feedrate. )\n"
        << "M3 ( Spindle on clockwise. )\n";
-    
+
     tiling.header( of );
 
     for( unsigned int i = 0; i < tileInfo.forYNum; i++ )
     {
         yoffsetTot = yoffset - i * tileInfo.boardHeight;
-        
+
         for( unsigned int j = 0; j < tileInfo.forXNum; j++ )
         {
             xoffsetTot = xoffset - ( i % 2 ? tileInfo.forXNum - j - 1 : j ) * tileInfo.boardWidth;
@@ -218,6 +218,9 @@ void NGC_Exporter::export_layer(shared_ptr<Layer> layer, string of_name)
             {
                 // retract, move to the starting point of the next contour
                 of << "G04 P0 ( dwell for no time -- G64 should not smooth over this point )\n";
+                if(!mill->custom_milling_stop_gcode.empty())
+                  of << mill->custom_milling_stop_gcode << " (custom_milling_stop_gcode. )\n";
+
                 of << "G00 Z" << mill->zsafe * cfactor << " ( retract )\n\n";
                 of << "G00 X" << ( path->begin()->first - xoffsetTot ) * cfactor << " Y"
                    << ( path->begin()->second - yoffsetTot ) * cfactor << " ( rapid move to begin. )\n";
@@ -242,6 +245,8 @@ void NGC_Exporter::export_layer(shared_ptr<Layer> layer, string of_name)
                     for (unsigned int i = 0; i < steps_num; i++)
                     {
                         const double z = mill->zwork / steps_num * (i + 1);
+                        if(!mill->custom_milling_start_gcode.empty())
+                          of << mill->custom_milling_start_gcode << " (custom_milling_start_gcode. )\n";
 
                         of << "G01 Z" << z * cfactor << " F" << mill->vertfeed * cfactor << " ( plunge. )\n";
                         of << "G04 P0 ( dwell for no time -- G64 should not smooth over this point )\n";
@@ -285,10 +290,11 @@ void NGC_Exporter::export_layer(shared_ptr<Layer> layer, string of_name)
                                         ++currentBridge;
                                 }
                             }
-
                             last = iter;
                             ++iter;
                         }
+                        if(!mill->custom_milling_stop_gcode.empty())
+                          of << mill->custom_milling_stop_gcode << " (custom_milling_stop_gcode. )\n";
                     }
                 }
                 else
@@ -305,8 +311,11 @@ void NGC_Exporter::export_layer(shared_ptr<Layer> layer, string of_name)
                                                       ( path->begin()->second - yoffsetTot ) * cfactor ) );
                     }
                     else
-                        of << "G01 Z" << mill->zwork * cfactor << "\n";
-
+                    {
+                      if(!mill->custom_milling_start_gcode.empty())
+                        of << mill->custom_milling_start_gcode << " (custom_milling_start_gcode. )\n";
+                      of << "G01 Z" << mill->zwork * cfactor << " ( plunge. )\n";
+                    }
                     of << "G04 P0 ( dwell for no time -- G64 should not smooth over this point )\n";
                     of << "F" << mill->feed * cfactor << '\n';
 
@@ -338,11 +347,13 @@ void NGC_Exporter::export_layer(shared_ptr<Layer> layer, string of_name)
                         last = iter;
                         ++iter;
                     }
+                    if(!mill->custom_milling_stop_gcode.empty())
+                      of << mill->custom_milling_stop_gcode << " (custom_milling_stop_gcode. )\n";
                 }
             }
         }
     }
-    
+
     tiling.footer( of );
 
     if( bAutolevelNow )
