@@ -54,6 +54,12 @@ stamp-h1
 testing/gerbv_example/*/*.png
 testing/gerbv_example/*/*.ngc
 testing/gerbv_example/*/*.svg
+build/*.ngc
+build/*.TXT
+build/*.txt
+build/*.gcode
+build/*.svg
+build/*.png
 
 #editor or browser files
 .directory

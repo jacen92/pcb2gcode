@@ -221,11 +221,12 @@ options::options()
             "outline", po::value<string>(), "pcb outline polygon RS274-X .gbr")(
             "drill", po::value<string>(), "Excellon drill file")(
             "svg", po::value<string>(), "[DEPRECATED] use --vectorial, SVGs will be generated automatically; this option has no effect")(
-            "zwork", po::value<double>(),
-            "milling depth in inches (Z-coordinate while engraving)")(
+            "zwork", po::value<double>(),"milling depth in inches (Z-coordinate while engraving)")(
+            "voronoi", po::value<bool>()->default_value(false)->implicit_value(true), "generate voronoi regions (requires --vectorial)")(
             "zsafe", po::value<double>(), "safety height (Z-coordinate during rapid moves)")(
             "offset", po::value<double>(), "distance between the PCB traces and the end mill path in inches; usually half the isolation width")(
-            "voronoi", po::value<bool>()->default_value(false)->implicit_value(true), "generate voronoi regions (requires --vectorial)")(
+            "x-offset", po::value<double>()->default_value(0.0), "distance between the PCB origin and the machine origin in the X axe")(
+            "y-offset", po::value<double>()->default_value(0.0), "distance between the PCB origin and the machine origin in the Y axe")(
             "custom_milling_start_gcode", po::value<string>(), "custom gcode integrated when milling step start (used to activate pump or fan)")(
             "custom_milling_stop_gcode", po::value<string>(), "custom gcode integrated when milling step stop(used to stop pump or fan)")(
             "mill-feed", po::value<double>(), "feed while isolating in [i/m] or [mm/m]")(
@@ -262,10 +263,8 @@ options::options()
             "zbridges", po::value<double>(), "bridges height (Z-coordinates while engraving bridges, default to zsafe) ")(
             "tile-x", po::value<int>()->default_value(1), "number of tiling columns. Default value is 1")(
             "tile-y", po::value<int>()->default_value(1), "number of tiling rows. Default value is 1")(
-            "al-front", po::value<bool>()->default_value(false)->implicit_value(true),
-            "enable the z autoleveller for the front layer")(
-            "al-back", po::value<bool>()->default_value(false)->implicit_value(true),
-            "enable the z autoleveller for the back layer")(
+            "al-front", po::value<bool>()->default_value(false)->implicit_value(true), "enable the z autoleveller for the front layer")(
+            "al-back", po::value<bool>()->default_value(false)->implicit_value(true), "enable the z autoleveller for the back layer")(
             "software", po::value<string>(), "choose the destination software (useful only with the autoleveller). Supported programs are linuxcnc, mach3, mach4 and custom")(
             "al-x", po::value<double>(), "width of the x probes")(
             "al-y", po::value<double>(), "width of the y probes")(
