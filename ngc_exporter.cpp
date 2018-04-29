@@ -51,6 +51,7 @@ NGC_Exporter::NGC_Exporter(shared_ptr<Board> board)
       quantization_error( 2.0 / dpi ), ocodes(1), globalVars(100)
 {
     this->board = board;
+    this->add_header("pcb2gcode with Jacen's patches");
 }
 
 /******************************************************************************/
@@ -68,8 +69,7 @@ void NGC_Exporter::add_header(string header)
 /******************************************************************************/
 void NGC_Exporter::export_all(boost::program_options::variables_map& options)
 {
-
-    bMetricinput = options["metric"].as<bool>();      //set flag for metric input
+    bMetricinput = options["metric"].as<bool>();             //set flag for metric input
     bMetricoutput = options["metricoutput"].as<bool>();      //set flag for metric output
     bZchangeG53 = options["zchange-absolute"].as<bool>();
     bFrontAutoleveller = options["al-front"].as<bool>();
@@ -77,7 +77,6 @@ void NGC_Exporter::export_all(boost::program_options::variables_map& options)
     string outputdir = options["output-dir"].as<string>();
     
     //set imperial/metric conversion factor for output coordinates depending on metricoutput option
-    cfactor = bMetricoutput ? 25.4 : 1;
     
     if( options["zero-start"].as<bool>() )
     {
@@ -86,10 +85,15 @@ void NGC_Exporter::export_all(boost::program_options::variables_map& options)
     }
     else
     {
-        xoffset = 0;
-        yoffset = 0;
+      // reverse factor to convert user input with --metric value
+      // this avoid double conversion
+        cfactor = bMetricinput ?  0.039370 : 1;
+        xoffset = options["x-offset"].as<double>()*cfactor;
+        yoffset = options["y-offset"].as<double>()*cfactor;
     }
     
+    // reset factor following bMetricoutput
+    cfactor = bMetricoutput ? 25.4 : 1;
     tileInfo = Tiling::generateTileInfo( options, ocodes, board->get_height(), board->get_width() );
 
     if( bFrontAutoleveller || bBackAutoleveller )
