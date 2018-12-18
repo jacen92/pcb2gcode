@@ -1,0 +1,40 @@
+# Use resin image to "cross-compile" from x86 or ARM to ARM
+FROM resin/armv7hf-debian:stretch
+
+LABEL Version="1.0"
+LABEL Maintainer="Nicolas Gargaud <jacen92@gmail.com>"
+LABEL Description="pcb2gcode builder image"
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV BOOST_MINOR_VER 68
+ENV BUILD_DIR=/tmp/build
+ENV PKG_DIR=/tmp/packages
+RUN apt-get update \
+&& apt-get install -y apt-utils nano htop \
+                      python python-pip git \
+                      build-essential automake autoconf autoconf-archive libtool \
+                      libgtkmm-2.4-dev gerbv librsvg2-dev \
+&& rm -rf /var/lib/apt/lists/*
+
+# install pip package for the test script
+RUN pip install setuptools && pip install unittest2 termcolor colour_runner
+
+# install boost from source (specific version is needed)
+RUN curl -L -v "http://sourceforge.net/projects/boost/files/boost/1.${BOOST_MINOR_VER}.0/boost_1_${BOOST_MINOR_VER}_0.tar.gz" | tar -C /tmp/ -xz && \
+    cd /tmp/boost_1_${BOOST_MINOR_VER}_0/ && ./bootstrap.sh --with-libraries=program_options --prefix=/opt/boost_1_${BOOST_MINOR_VER} && ./b2 -a variant=release link=static && ./b2 install && ldconfig && \
+    rm -rf /tmp/boost*
+
+# ==============================================================================
+# clone ( and first make )
+RUN mkdir ${PKG_DIR} && mkdir ${BUILD_DIR}
+COPY .  ${BUILD_DIR}/pcb2gcode
+# RUN cd ${BUILD_DIR} && git clone https://github.com/pcb2gcode/pcb2gcode.git -b master
+RUN cd ${BUILD_DIR}/pcb2gcode && git config --global user.email root@exemple.net \
+    && autoreconf -fvi && ./configure --with-boost=/opt/boost_1_${BOOST_MINOR_VER} --enable-static-boost && make -j4
+
+COPY scripts/info.json /root/info.json
+COPY scripts/package.py /usr/bin/package.py
+RUN chmod +x /usr/bin/package.py
+WORKDIR $BUILD_DIR/pcb2gcode
+VOLUME ["${PKG_DIR}"]
+CMD ["/bin/bash"]
