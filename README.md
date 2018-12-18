@@ -30,7 +30,7 @@ This development version of pcb2gcode does not get into repositories of distros.
     make
     su -c 'make install'
 	```
-    
+
 * done.
 
 #### Debian, Ubuntu:
@@ -172,13 +172,13 @@ You can find all the DLLs in &lt;msys2 installation folder&gt;/mingw32/bin; copy
 You can build the latest pcb2gcode version with [Homebrew](http://brew.sh). If Homebrew is not installed yet, install it with the following command:
 
      $ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-     
+
 You might need some build tools that typically are not present:
 
      $ brew install autoconf automake libtool
 
 Then you can download and build the git version with
-     
+
      $ brew install --HEAD pcb2gcode
 
 or (if pcb2gcode is already installed)
@@ -186,3 +186,23 @@ or (if pcb2gcode is already installed)
      $ brew upgrade --HEAD pcb2gcode
 
 For further details, see INSTALL.
+
+#### With docker
+You can use dockerfiles in the directory "scripts" to build docker image which contains all required dependencies to build pcb2gcode.
+This way you can build the project for x86_64 or ARM from your host.
+
+    $ docker build --rm -t pcb2gcode_builder:arm -f scripts/Dockerfile.arm .
+
+Then when the build is done start an instance of this image with:
+
+    $ docker run --rm -ti --name builder -v $PWD:/tmp/packages pcb2gcode_builder:arm
+
+From inside the container you should be able to run all tests with
+
+    $ python integration_tests.py
+
+Or you will be able to package this project and to export the result in /tmp/packages to get them in the host directory $PWD.
+
+    $ cd scripts
+    $ python package.py -i scripts/info.json
+    $ mv *.deb /tmp/packages/
