@@ -189,7 +189,7 @@ For further details, see INSTALL.
 
 #### With docker
 You can use dockerfiles in the directory "scripts" to build docker image which contains all required dependencies to build pcb2gcode.
-This way you can build the project for x86_64 or ARM from your host.
+This way you can build the project for x86_64 or ARM from your host. Make sure qemu-static-arm is executable (to avoid docker error like 'permission denied').
 
     $ docker build --rm -t pcb2gcode_builder:arm -f scripts/Dockerfile.arm .
 

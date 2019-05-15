@@ -17,7 +17,7 @@ RUN apt-get update \
 && rm -rf /var/lib/apt/lists/*
 
 # install pip package for the test script
-RUN pip install setuptools && pip install unittest2 termcolor colour_runner
+RUN pip install setuptools && pip install unittest2 termcolor colour_runner in-place concurrencytest
 
 # install boost from source (specific version is needed)
 RUN curl -L -v "http://sourceforge.net/projects/boost/files/boost/1.${BOOST_MINOR_VER}.0/boost_1_${BOOST_MINOR_VER}_0.tar.gz" | tar -C /tmp/ -xz && \

@@ -1,6 +1,6 @@
 {
   "name": "pcb2gcode",
-  "version": "1.4.0",
+  "version": "2.0.0",
   "description": "gerber to gcode converter",
   "dependencies": "boost (>= 1.68), gerbv, libgtkmm-2.4"
 }
