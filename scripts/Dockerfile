@@ -6,7 +6,7 @@ LABEL Maintainer="Nicolas Gargaud <jacen92@gmail.com>"
 LABEL Description="pcb2gcode builder image"
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV BOOST_MINOR_VER 68
+ENV BOOST_MINOR_VER 66
 ENV BUILD_DIR=/tmp/build
 ENV PKG_DIR=/tmp/packages
 RUN apt-get update \
