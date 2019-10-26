@@ -10,7 +10,7 @@ LABEL Description="pcb2gcode builder image"
 COPY scripts/qemu-arm-static /usr/bin
 
 ENV DEBIAN_FRONTEND noninteractive
-ENV BOOST_MINOR_VER 66
+ENV BOOST_MINOR_VER 68
 ENV BUILD_DIR=/tmp/build
 ENV PKG_DIR=/tmp/packages
 RUN apt-get update \
